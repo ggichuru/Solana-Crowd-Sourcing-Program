@@ -210,7 +210,41 @@ fn withdraw(
 fn donate(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
-        instruction_data: &[u8]) -> ProgramResult {
+        _instruction_data: &[u8]) -> ProgramResult {
+            let accounts_iter = &mut accounts.iter();
+            let writing_account = next_account_info(accounts_iter)?;   // Contains the data of the campaign we want to donate to
+            let donator_program_account = next_account_info(accounts_iter)?; // Has the lamport we would like to donate
+            let donator = next_account_info(accounts_iter)?;  // Account makin the donation
+
+            if writing_account.owner != program_id {
+                msg!("Writing account shoudl be owned by program");
+                return Err(ProgramError::IncorrectProgramId);
+            }
+
+            if donator_program_account.owner != program_id {
+                msg!("Donator program derived account should be owned by program");
+                return Err(ProgramError::IncorrectProgramId);
+            }            
+
+            if !donator.is_signer {
+                msg!("The donator should be the signer");
+                return Err(ProgramError::IncorrectProgramId);
+            }
+
+            // Get the campaign_data and increament the donated amount
+            let mut campaign_data = CampaignDetails::try_from_slice(*writing_account.data.borrow())
+                .expect("Deserializing campaign data failed");
+            
+            campaign_data.amount_donated += **donator_program_account.lamports.borrow();
+
+
+            // Do the transaction
+            /*
+                *donator_program_account is owned by program thus can decrease its lamports 
+            */
+            **writing_account.try_borrow_mut_lamports()? += **donator_program_account.lamports.borrow();
+            **donator_program_account.try_borrow_mut_lamports()? = 0;
+
             Ok(())
 }
 
