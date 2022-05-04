@@ -138,7 +138,7 @@ fn create_campaign(
 
 // Struct to hold the amount to withdraw
 #[derive(BorshDeserialize, BorshSerialize)]
-struct WithdrawAmount {
+struct WithdrawRequest {
     pub amount: u64,
 }
 
@@ -147,6 +147,57 @@ fn withdraw(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     instruction_data: &[u8]) -> ProgramResult {
+
+        let accounts_iter = &mut accounts.iter();
+        let writing_account = next_account_info(accounts_iter)?;
+        let admin_account = next_account_info(accounts_iter)?;
+
+        // Check if writing_account is owned by the program
+        if writing_account.owner != program_id {
+            msg!("Writting Account should be owned by program");
+            return Err(ProgramError::IncorrectProgramId);
+        }
+
+        // Admin account should be the signer of this tx
+        if !admin_account.is_signer {
+            msg!("Admin Account should be the signer");
+            return Err(ProgramError::IncorrectProgramId);
+        }
+
+        // Get campaign data and check if admin's_a/c pub key is the same as the one stored in campaign data
+        let campaign_data = CampaignDetails::try_from_slice(*writing_account.data.borrow())
+            .expect("Error desirializing campaign data");
+        
+        if campaign_data.admin != *admin_account.key {
+            msg!("Only Admin Account can withdraw");
+            return Err(ProgramError::InvalidAccountData);
+        }
+
+
+        // Get input_data to get the amount of lamport the admin wants to withdraw
+        let input_data = WithdrawRequest::try_from_slice(&instruction_data)
+            .expect("Instruction data deserialization failed");
+        
+        // To prevent campaign from being deleted after a withdrawal, always have a minimum balance
+        
+        let rent_exemption = Rent::get()?.minimum_balance(writing_account.data_len());
+
+        // Check if lamports are enough
+        if **writing_account.lamports.borrow() - rent_exemption < input_data.amount {
+            msg!("Insufficient Funds.");
+            return Err(ProgramError::InsufficientFunds);
+        }
+
+
+        /* 
+            * Transfer Balance 
+            * HOW??
+            * Decrease the balance of the program_account and increase the admina_account balance
+        */
+
+        **writing_account.try_borrow_mut_lamports()? -= input_data.amount;
+        **admin_account.try_borrow_mut_lamports()? += input_data.amount;
+
         Ok(())
 }
 
