@@ -1,5 +1,5 @@
 [package]
-name = "crowdSourcingProgram"
+name = "crowd_sourcing_program"
 version = "0.1.0"
 edition = "2021"
 
