@@ -4,7 +4,22 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program_error::ProgramError,
-    pubkey::PubKey,
+    pubkey::Pubkey,
     rent::Rent,
     sysvar::Sysvar
 };
+
+
+  // ------------------------------//
+ //          ENTRY POINT          //
+//-------------------------------//
+
+fn process_instruction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8]
+) -> ProgramResult {
+    Ok(())
+}
+
+entrypoint!(process_instruction);
