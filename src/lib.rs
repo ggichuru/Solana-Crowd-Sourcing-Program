@@ -132,9 +132,28 @@ fn create_campaign(
     }
 
 
+  // ------------------------------//
+ //          WITHDRAW (1)         //
+//-------------------------------//
+
+// Struct to hold the amount to withdraw
+#[derive(BorshDeserialize, BorshSerialize)]
+struct WithdrawAmount {
+    pub amount: u64,
+}
+
+// Withdraw function
+fn withdraw(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8]) -> ProgramResult {
+        Ok(())
+}
+
+
 
   // ------------------------------//
- //          DONATE (1)           //
+ //          DONATE (2)           //
 //-------------------------------//
 
 fn donate(
@@ -145,14 +164,3 @@ fn donate(
 }
 
 
-
-  // ------------------------------//
- //          WITHDRAW (2)         //
-//-------------------------------//
-
-fn withdraw(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    instruction_data: &[u8]) -> ProgramResult {
-        Ok(())
-}
